@@ -4,10 +4,29 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, location, phone } = req.body;
+    const { name, email, password, role, location, phone, organizationName, organizationEmail } = req.body;
     
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: 'User already exists' });
+    
+    // Validate NGO registration requirements
+    if (role === 'ngo') {
+      if (!organizationName || !organizationEmail) {
+        return res.status(400).json({ 
+          msg: 'NGO registration requires organization name and official email' 
+        });
+      }
+      
+      // Optional: Validate organization email domain
+      const ngoEmailDomains = ['.org', '.gov', '.edu', 'ngo.', 'foundation.'];
+      const hasValidDomain = ngoEmailDomains.some(domain => organizationEmail.includes(domain));
+      
+      if (!hasValidDomain) {
+        return res.status(400).json({ 
+          msg: 'Please provide an official organization email (.org, .gov, .edu, etc.)' 
+        });
+      }
+    }
     
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -18,7 +37,11 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
       location,
-      phone
+      phone,
+      organizationName: role === 'ngo' ? organizationName : undefined,
+      organizationEmail: role === 'ngo' ? organizationEmail : undefined,
+      isVerified: role === 'ngo' ? false : true, // NGOs need verification
+      verificationStatus: role === 'ngo' ? 'pending' : 'approved'
     });
     
     await user.save();
@@ -27,7 +50,24 @@ exports.register = async (req, res) => {
     
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
       if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+      
+      const response = { 
+        token, 
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          role: user.role,
+          isVerified: user.isVerified,
+          verificationStatus: user.verificationStatus
+        } 
+      };
+      
+      // Add message for NGOs awaiting verification
+      if (role === 'ngo') {
+        response.msg = 'NGO account created! Awaiting admin verification. You will have limited permissions until approved.';
+      }
+      
+      res.json(response);
     });
   } catch (err) {
     console.error(err.message);
@@ -49,7 +89,24 @@ exports.login = async (req, res) => {
     
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
       if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+      
+      const response = {
+        token, 
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          role: user.role,
+          isVerified: user.isVerified,
+          verificationStatus: user.verificationStatus
+        }
+      };
+      
+      // Warning for unverified NGOs
+      if (user.role === 'ngo' && !user.isVerified) {
+        response.msg = 'Your NGO account is pending verification. Limited permissions.';
+      }
+      
+      res.json(response);
     });
   } catch (err) {
     console.error(err.message);

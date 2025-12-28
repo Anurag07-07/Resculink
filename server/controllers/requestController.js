@@ -1,4 +1,5 @@
 const Request = require('../models/Request');
+const User = require('../models/User');
 const { classifyUrgency } = require('../ai/urgencyClassifier');
 
 exports.createRequest = async (req, res) => {
@@ -48,13 +49,19 @@ exports.updateStatus = async (req, res) => {
         
         if (!request) return res.status(404).json({ msg: 'Request not found' });
         
+        // Fetch user from DB to check verification status
+        const currentUser = await User.findById(req.user.id);
+        if (!currentUser) return res.status(401).json({ msg: 'User not found' });
+
         // Check Authorization
         if (status === 'resolved') {
             const isOwner = request.userId.toString() === req.user.id;
-            const isAdminOrNGO = req.user.role === 'admin' || req.user.role === 'ngo';
+            const isAdminOrNGO = currentUser.role === 'admin' || currentUser.role === 'ngo';
+            const isVerified = currentUser.isVerified;
             
-            if (!isOwner && !isAdminOrNGO) {
-                return res.status(401).json({ msg: 'Not authorized to resolve this request' });
+            // Only allow if Owner OR (Admin/NGO AND Verified)
+            if (!isOwner && (!isAdminOrNGO || !isVerified)) {
+                return res.status(401).json({ msg: 'Not authorized to resolve this request. Verification required.' });
             }
             request.resolvedAt = Date.now();
         }

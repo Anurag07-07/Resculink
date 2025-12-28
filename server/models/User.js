@@ -11,6 +11,21 @@ const UserSchema = new mongoose.Schema({
   },
   phone: { type: String },
   isAvailable: { type: Boolean, default: true }, // For volunteers
+  
+  // NGO Verification Fields (Security Protection)
+  isVerified: { type: Boolean, default: false }, // Admin approval required for NGOs
+  verificationStatus: { 
+    type: String, 
+    enum: ['pending', 'approved', 'rejected'], 
+    default: function() {
+      return this.role === 'ngo' ? 'pending' : 'approved';
+    }
+  },
+  organizationName: { type: String }, // Required for NGOs
+  organizationEmail: { type: String }, // Official NGO email
+  verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Which admin verified
+  verifiedAt: { type: Date }, // When verified
+  
   createdAt: { type: Date, default: Date.now }
 });
 
