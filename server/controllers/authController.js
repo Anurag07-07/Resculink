@@ -6,10 +6,12 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, role, location, phone, organizationName, organizationEmail } = req.body;
     
-    let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ msg: 'User already exists' });
-    
-    // Admin Override for Hardcoded Super Admin
+    // Security: Only specific email can obtain Admin role
+    if (role === 'admin' && email !== 'anurag07raj@gmail.com') {
+      return res.status(403).json({ msg: 'Unauthorized: You cannot create an Admin account.' });
+    }
+
+    // Auto-promote hardcoded admin even if they selected something else (optional convenience)
     if (email === 'anurag07raj@gmail.com') {
       role = 'admin';
     }

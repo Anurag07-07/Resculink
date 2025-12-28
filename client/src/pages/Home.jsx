@@ -68,6 +68,7 @@ const Home = () => {
                 <option value="victim">Victim (Need Help)</option>
                 <option value="volunteer">Volunteer (Provide Help)</option>
                 <option value="ngo">NGO / Organization</option>
+                <option value="admin">Administrator (Restricted)</option>
               </select>
 
               {formData.role === 'ngo' && (
