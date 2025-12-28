@@ -69,6 +69,27 @@ const Home = () => {
                 <option value="volunteer">Volunteer (Provide Help)</option>
                 <option value="ngo">NGO / Organization</option>
               </select>
+
+              {formData.role === 'ngo' && (
+                <div className="space-y-4 pt-2 border-t border-gray-700/30">
+                  <input
+                    type="text"
+                    name="organizationName"
+                    placeholder="Organization Name"
+                    onChange={handleChange}
+                    className="clean-input p-3 rounded-lg w-full"
+                    required
+                  />
+                  <input
+                    type="email"
+                    name="organizationEmail"
+                    placeholder="Official Organization Email"
+                    onChange={handleChange}
+                    className="clean-input p-3 rounded-lg w-full"
+                    required
+                  />
+                </div>
+              )}
             </motion.div>
           )}
           <input type="email" name="email" placeholder="Email Address" onChange={handleChange} className="clean-input p-3 rounded-lg" required />

@@ -6,10 +6,21 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard'; // Import
 import Header from './components/Header';
 
+import PendingVerification from './pages/PendingVerification'; // Import
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>; // Or a nice spinner
-  return user ? children : <Navigate to="/" />;
+  if (!user) return <Navigate to="/" />;
+
+  // Create a separate check for pending status if needed, 
+  // or handle it inside the specific page or a specific middleware component.
+  // For now, let's keep it simple: if trying to access dashboard and is pending NGO
+  if (user.role === 'ngo' && !user.isVerified) {
+    return <Navigate to="/pending-verification" />;
+  }
+
+  return children;
 };
 
 function App() {
@@ -19,6 +30,7 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/pending-verification" element={<PendingVerification />} />
           <Route
             path="/dashboard"
             element={

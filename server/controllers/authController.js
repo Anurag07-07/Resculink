@@ -9,6 +9,11 @@ exports.register = async (req, res) => {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: 'User already exists' });
     
+    // Admin Override for Hardcoded Super Admin
+    if (email === 'anurag07raj@gmail.com') {
+      role = 'admin';
+    }
+
     // Validate NGO registration requirements
     if (role === 'ngo') {
       if (!organizationName || !organizationEmail) {
@@ -17,15 +22,7 @@ exports.register = async (req, res) => {
         });
       }
       
-      // Optional: Validate organization email domain
-      const ngoEmailDomains = ['.org', '.gov', '.edu', 'ngo.', 'foundation.'];
-      const hasValidDomain = ngoEmailDomains.some(domain => organizationEmail.includes(domain));
-      
-      if (!hasValidDomain) {
-        return res.status(400).json({ 
-          msg: 'Please provide an official organization email (.org, .gov, .edu, etc.)' 
-        });
-      }
+      // Removed strict domain validation for Hackathon flexibility
     }
     
     const salt = await bcrypt.genSalt(10);
@@ -40,8 +37,8 @@ exports.register = async (req, res) => {
       phone,
       organizationName: role === 'ngo' ? organizationName : undefined,
       organizationEmail: role === 'ngo' ? organizationEmail : undefined,
-      isVerified: role === 'ngo' ? false : true, // NGOs need verification
-      verificationStatus: role === 'ngo' ? 'pending' : 'approved'
+      isVerified: role === 'admin' ? true : (role === 'ngo' ? false : true), 
+      verificationStatus: role === 'admin' ? 'approved' : (role === 'ngo' ? 'pending' : 'approved')
     });
     
     await user.save();
@@ -64,6 +61,10 @@ exports.register = async (req, res) => {
       
       // Add message for NGOs awaiting verification
       if (role === 'ngo') {
+        const io = req.app.get('io');
+        // Emit event to admins
+        io.emit('newNGORegistration', user);
+
         response.msg = 'NGO account created! Awaiting admin verification. You will have limited permissions until approved.';
       }
       
