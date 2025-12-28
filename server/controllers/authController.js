@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, location, phone, organizationName, organizationEmail } = req.body;
+    const { name, email, password, role, location, phone, organizationName, organizationEmail, associatedNGO } = req.body;
     
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: 'User already exists' });
@@ -17,6 +17,13 @@ exports.register = async (req, res) => {
     // Auto-promote hardcoded admin even if they selected something else (optional convenience)
     if (email === 'anurag07raj@gmail.com') {
       role = 'admin';
+    }
+
+    // Validate Volunteer NGO association
+    if (role === 'volunteer' && !associatedNGO) {
+      return res.status(400).json({ 
+        msg: 'Volunteers must select an associated NGO' 
+      });
     }
 
     // Validate NGO registration requirements
@@ -40,6 +47,7 @@ exports.register = async (req, res) => {
       role,
       location,
       phone,
+      associatedNGO: role === 'volunteer' ? associatedNGO : undefined,
       organizationName: role === 'ngo' ? organizationName : undefined,
       organizationEmail: role === 'ngo' ? organizationEmail : undefined,
       isVerified: role === 'admin' ? true : (role === 'ngo' ? false : true), 

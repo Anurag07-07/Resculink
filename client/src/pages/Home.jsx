@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Globe, ShieldCheck, Zap } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Home = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'victim', phone: '' });
+  const [verifiedNGOs, setVerifiedNGOs] = useState([]);
   const { login, register } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch verified NGOs for volunteer selection
+  useEffect(() => {
+    const fetchNGOs = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/ngos/verified`);
+        setVerifiedNGOs(res.data);
+      } catch (err) {
+        console.error('Error fetching NGOs:', err);
+      }
+    };
+    fetchNGOs();
+  }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -70,6 +87,30 @@ const Home = () => {
                 <option value="ngo">NGO / Organization</option>
                 <option value="admin">Administrator (Restricted)</option>
               </select>
+
+              {formData.role === 'volunteer' && (
+                <div className="space-y-2 pt-2 border-t border-gray-700/30">
+                  <label className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                    Select Your Organization *
+                  </label>
+                  <select
+                    name="associatedNGO"
+                    onChange={handleChange}
+                    className="clean-input p-3 rounded-lg w-full"
+                    required
+                  >
+                    <option value="">-- Choose an NGO --</option>
+                    {verifiedNGOs.map(ngo => (
+                      <option key={ngo._id} value={ngo._id}>
+                        {ngo.organizationName || ngo.name}
+                      </option>
+                    ))}
+                  </select>
+                  {verifiedNGOs.length === 0 && (
+                    <p className="text-xs text-yellow-500">No verified NGOs available yet. Please contact admin.</p>
+                  )}
+                </div>
+              )}
 
               {formData.role === 'ngo' && (
                 <div className="space-y-4 pt-2 border-t border-gray-700/30">

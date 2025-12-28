@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
   },
   phone: { type: String },
   isAvailable: { type: Boolean, default: true }, // For volunteers
+  associatedNGO: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // For volunteers - which NGO they belong to
   
   // NGO Verification Fields (Security Protection)
   isVerified: { type: Boolean, default: false }, // Admin approval required for NGOs

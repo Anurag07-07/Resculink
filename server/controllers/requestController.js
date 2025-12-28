@@ -59,6 +59,17 @@ exports.updateStatus = async (req, res) => {
             const isAdminOrNGO = currentUser.role === 'admin' || currentUser.role === 'ngo';
             const isVerified = currentUser.isVerified;
             
+            // If NGO is resolving, check if they're associated with the assigned volunteer
+            if (currentUser.role === 'ngo' && request.assignedTo) {
+                const assignedVolunteer = await User.findById(request.assignedTo);
+                
+                if (!assignedVolunteer || assignedVolunteer.associatedNGO?.toString() !== currentUser._id.toString()) {
+                    return res.status(401).json({ 
+                        msg: 'You can only resolve requests assigned to your organization\'s volunteers.' 
+                    });
+                }
+            }
+            
             // Only allow if Owner OR (Admin/NGO AND Verified)
             if (!isOwner && (!isAdminOrNGO || !isVerified)) {
                 return res.status(401).json({ msg: 'Not authorized to resolve this request. Verification required.' });

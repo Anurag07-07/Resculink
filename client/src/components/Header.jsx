@@ -16,6 +16,26 @@ const Header = () => {
       <nav>
         {user ? (
           <div className="flex items-center gap-6">
+            {/* Navigation Links */}
+            <div className="flex items-center gap-4">
+              <Link
+                to="/dashboard"
+                className="text-sm font-medium text-slate-300 hover:text-white transition"
+              >
+                Dashboard
+              </Link>
+
+              {user.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-2 text-sm font-medium bg-emerald-600/10 text-emerald-400 hover:bg-emerald-600/20 px-3 py-1.5 rounded-lg border border-emerald-600/30 transition"
+                >
+                  <Shield size={14} />
+                  Admin Panel
+                </Link>
+              )}
+            </div>
+
             <div className="hidden md:flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-brand-muted border border-brand-border px-3 py-1 rounded">
               <Shield size={12} />
               {user.role}
