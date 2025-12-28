@@ -3,6 +3,8 @@ import axios from 'axios';
 import { X, Send, MapPin, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const RequestModal = ({ onClose }) => {
   const [formData, setFormData] = useState({ title: '', description: '', category: 'Food', lat: 0, lng: 0 });
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ const RequestModal = ({ onClose }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/requests', {
+      await axios.post(`${API_URL}/api/requests`, {
         title: formData.title,
         description: formData.description,
         category: formData.category,

@@ -7,6 +7,8 @@ import RequestModal from '../components/RequestModal';
 import { Plus, Clock, Activity, BarChart3, Map as MapIcon, ShieldAlert, ShieldCheck, TrendingUp, CheckCircle2, AlertCircle, Users, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
@@ -18,7 +20,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchRequests();
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io(API_URL);
     setSocket(newSocket);
 
     newSocket.on('newRequest', (req) => {
@@ -34,7 +36,7 @@ const Dashboard = () => {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/requests');
+      const res = await axios.get(`${API_URL}/api/requests`);
       setRequests(res.data);
     } catch (err) {
       console.error(err);
@@ -44,7 +46,7 @@ const Dashboard = () => {
   const resolveRequest = async (id) => {
     try {
       if (!confirm("Mark this issue as resolved? This will close the case.")) return;
-      await axios.put(`http://localhost:5000/api/requests/${id}`, { status: 'resolved' });
+      await axios.put(`${API_URL}/api/requests/${id}`, { status: 'resolved' });
     } catch (err) {
       alert(err.response?.data?.msg || "Failed to resolve");
     }
@@ -53,7 +55,7 @@ const Dashboard = () => {
   const acceptTask = async (id) => {
     try {
       if (!confirm("Accept this task? You will be assigned and the victim will be notified.")) return;
-      const res = await axios.post(`http://localhost:5000/api/requests/${id}/accept`);
+      const res = await axios.post(`${API_URL}/api/requests/${id}/accept`);
 
       // Show victim contact information
       const contact = res.data.victimContact;
