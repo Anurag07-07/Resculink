@@ -8,8 +8,25 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
+// CORS - Updated for production
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL // Add your Vercel URL via environment variable
+].filter(Boolean);
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // Socket.IO
