@@ -40,6 +40,18 @@ const seed = async () => {
         role: 'ngo'
     }).save();
 
+    // Specific Admin User
+    const adminPassword = await bcrypt.hash('anurag#@12', salt);
+    await new User({
+        name: 'Anurag Raj',
+        email: 'anurag07raj@gmail.com',
+        password: adminPassword,
+        role: 'admin',
+        phone: '+917464954996',
+        isVerified: true,
+        verificationStatus: 'approved'
+    }).save();
+
     console.log('Users created');
 
     // Create Requests
